@@ -533,7 +533,7 @@
                                     Padding="15,8"
                                     Margin="10,0,0,0"
                                     ToolTip="Fetch game count information from Steam Web API"/>
-                            
+
                             <Button Content="📋 Open Log File" 
                                     Style="{StaticResource ModernButton}"
                                     Command="{Binding OpenLogFileCommand}"
@@ -542,7 +542,7 @@
                                     Padding="15,8"
                                     Margin="10,0,0,0"
                                     ToolTip="Open the detailed log file to investigate operations"/>
-                            
+
                             <Button Content="🧹 Clear Log File" 
                                     Style="{StaticResource ModernButton}"
                                     Command="{Binding ClearLogFileCommand}"
@@ -551,6 +551,24 @@
                                     Padding="15,8"
                                     Margin="10,0,0,0"
                                     ToolTip="Clear the contents of the log file (keeps the file)"/>
+
+                            <Button Content="📁 Open AppData Folder" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding OpenAppDataFolderCommand}"
+                                    Background="#9C27B0"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="10,0,0,0"
+                                    ToolTip="Open the AppData folder where all app data is stored (logs, cache, accounts)"/>
+                            
+                            <Button Content="🔍 Diagnose Game Loading" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding DiagnoseGameLoadingCommand}"
+                                    Background="#FF5722"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="10,0,0,0"
+                                    ToolTip="Run diagnostics to check why games aren't loading"/>
 
                         </StackPanel>
                     </StackPanel>

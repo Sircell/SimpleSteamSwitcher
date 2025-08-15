@@ -94,6 +94,8 @@ namespace SimpleSteamSwitcher.ViewModels
         // Removed: PowerShell auto-fill commands for simplified account switching
         public ICommand OpenLogFileCommand { get; private set; }
         public ICommand ClearLogFileCommand { get; private set; }
+        public ICommand OpenAppDataFolderCommand { get; private set; }
+        public ICommand DiagnoseGameLoadingCommand { get; private set; }
 
         public ICommand AddPasswordCommand { get; private set; }
         public ICommand ShowAccountDetailsCommand { get; private set; }
@@ -187,6 +189,8 @@ namespace SimpleSteamSwitcher.ViewModels
             BulkDeleteCommand = new RelayCommand<List<SteamAccount>>(async accounts => await BulkDeleteAccountsAsync(accounts));
             OpenLogFileCommand = new RelayCommand(() => OpenLogFile());
             ClearLogFileCommand = new RelayCommand(async () => await ClearLogFileAsync());
+            OpenAppDataFolderCommand = new RelayCommand(() => OpenAppDataFolder());
+            DiagnoseGameLoadingCommand = new RelayCommand(async () => await DiagnoseGameLoadingAsync());
 
             AddPasswordCommand = new RelayCommand<SteamAccount>(async account => await AddPasswordAsync(account));
             ShowAccountDetailsCommand = new RelayCommand<SteamAccount>(account => ShowAccountDetails(account));
@@ -424,9 +428,9 @@ namespace SimpleSteamSwitcher.ViewModels
                             // Thread-safe addition to shared collection
                             lock (allGames)
                             {
-                                allGames.AddRange(gamesToAdd);
+                            allGames.AddRange(gamesToAdd);
                             }
-                            
+
                             _logger.LogInfo($"Added {gamesToAdd.Count} games for {account.DisplayName}");
                             _logger.LogSuccess($"Loaded {steamGames.Count} games for {account.DisplayName}");
                         }
@@ -446,7 +450,7 @@ namespace SimpleSteamSwitcher.ViewModels
                     finally
                     {
                         semaphore.Release();
-                    }
+                }
                 });
 
                 await Task.WhenAll(tasks);
@@ -516,7 +520,7 @@ namespace SimpleSteamSwitcher.ViewModels
                     // OPTIMIZATION: Process games sequentially with proper delays to avoid API rate limiting
                     _logger.LogInfo("Processing games sequentially to avoid Steam API rate limits...");
                     var processedCount = 0;
-                    
+                
                     foreach (var game in unknownGames)
                     {
                         try
@@ -722,7 +726,7 @@ namespace SimpleSteamSwitcher.ViewModels
                 else if (result == MessageBoxResult.Cancel)
                 {
                     // Remove current key
-                    _apiKeyService.DeleteApiKey();
+                _apiKeyService.DeleteApiKey();
                     RefreshApiKeyStatus();
                     StatusMessage = "API key removed. Some features will be unavailable.";
                     _logger.LogInfo("API key removed by user");
@@ -754,9 +758,9 @@ namespace SimpleSteamSwitcher.ViewModels
                         RefreshApiKeyStatus();
                         StatusMessage = "API key saved successfully!";
                         _logger.LogSuccess("New API key configured by user");
-                    }
-                    catch (Exception ex)
-                    {
+            }
+            catch (Exception ex)
+            {
                         MessageBox.Show($"Failed to save API key: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         _logger.LogError($"Failed to save API key: {ex.Message}");
                     }
@@ -984,7 +988,7 @@ namespace SimpleSteamSwitcher.ViewModels
                     Accounts.Add(account);
                     System.Diagnostics.Debug.WriteLine($"Added account: {account.DisplayName} ({account.SteamId}) - Online: {account.IsCurrentAccount}");
                 }
-                
+
                 // Get current account
                 CurrentAccount = await _steamService.GetCurrentAccountAsync();
                 
@@ -1053,7 +1057,7 @@ namespace SimpleSteamSwitcher.ViewModels
             
             _logger.LogInfo("Cache auto-refresh timer started - will check every 30 minutes");
         }
-        
+
         /// <summary>
         /// Check if cache needs refreshing and automatically update it
         /// This runs every 30 minutes to keep games data fresh
@@ -1928,22 +1932,90 @@ namespace SimpleSteamSwitcher.ViewModels
                 {
                     StatusMessage = "Steam Web API key required to load games. Please configure it in the Games tab.";
                     _logger.LogWarning("Cannot load games - Steam Web API service not initialized");
+                    _logger.LogError("CACHE DEBUG: Cannot create cache - no Steam Web API service");
+                    return;
+                }
+
+                if (Accounts.Count == 0)
+                {
+                    StatusMessage = "No accounts found. Please add accounts first.";
+                    _logger.LogWarning("Cannot load games - no accounts available");
+                    _logger.LogError("CACHE DEBUG: Cannot create cache - no accounts loaded");
                     return;
                 }
 
                 IsLoadingGames = true;
                 StatusMessage = "Loading all games...";
                 _logger.LogInfo("=== LOADING ALL GAMES STARTED ===");
+                _logger.LogInfo($"Current account count: {Accounts.Count}");
+                _logger.LogInfo($"CACHE DEBUG: Starting game load process with {Accounts.Count} accounts");
 
                 // Always fetch fresh data when button is clicked manually
                 _logger.LogInfo("Manual update requested - fetching fresh game data from Steam API");
                 StatusMessage = "Fetching latest games data from Steam API...";
                 
+                _logger.LogInfo("CACHE DEBUG: About to call FetchAllGamesFromApiAsync()");
                 var games = await FetchAllGamesFromApiAsync();
+                _logger.LogInfo($"CACHE DEBUG: FetchAllGamesFromApiAsync returned {games?.Count ?? 0} games");
+                _logger.LogInfo($"FetchAllGamesFromApiAsync returned {games?.Count ?? 0} games");
+                
+                if (games == null)
+                {
+                    _logger.LogError("FetchAllGamesFromApiAsync returned null!");
+                    _logger.LogError("CACHE DEBUG: Games is null - cache will NOT be created");
+                    StatusMessage = "Error: No games data received";
+                    return;
+                }
+                
+                if (games.Count == 0)
+                {
+                    _logger.LogWarning("FetchAllGamesFromApiAsync returned 0 games - this might indicate an issue");
+                    _logger.LogWarning("CACHE DEBUG: Games count is 0 - cache will be created but empty");
+                    StatusMessage = "Warning: No games found for any account";
+                    // Continue to save empty cache
+                }
                 
                 // Save fresh data to cache
-                await _gameCacheService.SaveCacheAsync(games);
-                _logger.LogInfo("Fresh game data saved to cache");
+                _logger.LogInfo($"About to save {games.Count} games to cache...");
+                _logger.LogInfo($"CACHE DEBUG: Calling SaveCacheAsync with {games.Count} games");
+                
+                try
+                {
+                    await _gameCacheService.SaveCacheAsync(games);
+                    _logger.LogSuccess("Fresh game data saved to cache");
+                    _logger.LogSuccess($"CACHE DEBUG: SaveCacheAsync completed successfully for {games.Count} games");
+                    
+                    // VERIFICATION: Double-check that the file was actually created
+                    var (exists, lastModified, sizeBytes) = _gameCacheService.GetCacheInfo();
+                    if (exists)
+                    {
+                        _logger.LogSuccess($"CACHE DEBUG: VERIFICATION PASSED - Cache file exists, size: {sizeBytes} bytes, modified: {lastModified}");
+                    }
+                    else
+                    {
+                        _logger.LogError("CACHE DEBUG: VERIFICATION FAILED - Cache file does not exist after save!");
+                    }
+                }
+                catch (Exception cacheEx)
+                {
+                    _logger.LogError($"CACHE DEBUG: SaveCacheAsync failed! Error: {cacheEx.Message}");
+                    _logger.LogError($"CACHE DEBUG: SaveCacheAsync stack trace: {cacheEx.StackTrace}");
+                    
+                    // Try to save cache with minimal data as fallback
+                    try
+                    {
+                        _logger.LogInfo("CACHE DEBUG: Attempting fallback cache save with empty list...");
+                        await _gameCacheService.SaveCacheAsync(new List<Game>());
+                        _logger.LogInfo("CACHE DEBUG: Fallback cache save succeeded");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        _logger.LogError($"CACHE DEBUG: Even fallback cache save failed: {fallbackEx.Message}");
+                    }
+                    
+                    // Don't re-throw - continue with the application
+                    StatusMessage = $"Warning: Cache save failed, but {games.Count} games loaded successfully";
+                }
 
                 // CRITICAL: Display games immediately in UI - no waiting!
                 StatusMessage = "Updating game list...";
@@ -1972,6 +2044,7 @@ namespace SimpleSteamSwitcher.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError($"Error in LoadAllGamesAsync: {ex.Message}");
+                _logger.LogError($"Stack trace: {ex.StackTrace}");
                 StatusMessage = $"Error loading games: {ex.Message}";
             }
             finally
@@ -2833,14 +2906,14 @@ namespace SimpleSteamSwitcher.ViewModels
                 _logger.LogInfo($"ShowGamesTab: {AllGames.Count} games available, ensuring UI visibility");
                 
                 // Force a refresh of the games display immediately
-                try
-                {
-                    EnsureGamesVisibility();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Error refreshing games UI in ShowGamesTab: {ex.Message}");
-                }
+                    try
+                    {
+                        EnsureGamesVisibility();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error refreshing games UI in ShowGamesTab: {ex.Message}");
+                    }
             }
             else
             {
@@ -3283,6 +3356,99 @@ namespace SimpleSteamSwitcher.ViewModels
                     "Log File Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Warning);
+            }
+        }
+
+        private void OpenAppDataFolder()
+        {
+            try
+            {
+                var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimpleSteamSwitcher");
+                
+                // Create the directory if it doesn't exist
+                Directory.CreateDirectory(appDataPath);
+                
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = appDataPath,
+                    UseShellExecute = true
+                });
+                StatusMessage = "AppData folder opened";
+                _logger.LogInfo($"Opened AppData folder: {appDataPath}");
+            }
+            catch (Exception ex)
+            {
+                var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimpleSteamSwitcher");
+                StatusMessage = $"Error opening AppData folder: {ex.Message}";
+                System.Windows.MessageBox.Show(
+                    $"Could not open AppData folder: {ex.Message}\n\nFolder location: {appDataPath}",
+                    "AppData Folder Error",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            }
+        }
+
+        private async Task DiagnoseGameLoadingAsync()
+        {
+            try
+            {
+                _logger.LogInfo("=== GAME LOADING DIAGNOSTICS STARTED ===");
+                StatusMessage = "Running game loading diagnostics...";
+
+                // Check accounts
+                _logger.LogInfo($"Total accounts loaded: {Accounts.Count}");
+                foreach (var account in Accounts.Take(5)) // Log first 5 accounts
+                {
+                    _logger.LogInfo($"Account: {account.DisplayName} - SteamID: {account.SteamId} - Valid: {!string.IsNullOrEmpty(account.SteamId)}");
+                }
+
+                // Check API service
+                if (_steamWebApiService == null)
+                {
+                    _logger.LogError("Steam Web API service is NULL - this is the problem!");
+                    StatusMessage = "ERROR: Steam Web API service not initialized";
+                    return;
+                }
+                _logger.LogInfo("Steam Web API service is initialized");
+
+                // Check API key
+                var hasApiKey = _apiKeyService.HasSavedApiKey();
+                _logger.LogInfo($"Has API key saved: {hasApiKey}");
+
+                // Test one account's game loading
+                var testAccount = Accounts.FirstOrDefault(a => !string.IsNullOrEmpty(a.SteamId));
+                if (testAccount != null)
+                {
+                    _logger.LogInfo($"Testing game loading for account: {testAccount.DisplayName}");
+                    try
+                    {
+                        var games = await _steamWebApiService.GetAccountGamesAsync(testAccount.SteamId);
+                        _logger.LogInfo($"Successfully loaded {games.Count} games for {testAccount.DisplayName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to load games for {testAccount.DisplayName}: {ex.Message}");
+                    }
+                }
+
+                // Check cache file path
+                var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimpleSteamSwitcher");
+                var cacheFilePath = Path.Combine(appDataPath, "games_cache.json");
+                _logger.LogInfo($"Cache file path: {cacheFilePath}");
+                _logger.LogInfo($"Cache file exists: {File.Exists(cacheFilePath)}");
+                if (File.Exists(cacheFilePath))
+                {
+                    var fileInfo = new FileInfo(cacheFilePath);
+                    _logger.LogInfo($"Cache file size: {fileInfo.Length} bytes, Last modified: {fileInfo.LastWriteTime}");
+                }
+
+                StatusMessage = "Diagnostics completed - check log for details";
+                _logger.LogInfo("=== GAME LOADING DIAGNOSTICS COMPLETED ===");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error during diagnostics: {ex.Message}");
+                StatusMessage = $"Diagnostics error: {ex.Message}";
             }
         }
 

@@ -80,6 +80,8 @@ namespace SimpleSteamSwitcher.Services
             try
             {
                 _logger.LogInfo($"Saving {games.Count} games to cache...");
+                _logger.LogInfo($"CACHE DEBUG: Cache file path: {_cacheFilePath}");
+                _logger.LogInfo($"CACHE DEBUG: Directory exists: {Directory.Exists(Path.GetDirectoryName(_cacheFilePath))}");
                 
                 var cache = new GameCache
                 {
@@ -87,8 +89,19 @@ namespace SimpleSteamSwitcher.Services
                     Games = games.Select(CachedGame.FromGame).ToList()
                 };
                 
+                _logger.LogInfo($"CACHE DEBUG: Created GameCache object with {cache.Games.Count} games");
+                
                 var jsonContent = JsonConvert.SerializeObject(cache, Formatting.Indented);
+                _logger.LogInfo($"CACHE DEBUG: Serialized JSON content length: {jsonContent.Length} characters");
+                
                 await File.WriteAllTextAsync(_cacheFilePath, jsonContent);
+                _logger.LogInfo($"CACHE DEBUG: File written successfully, checking if file exists: {File.Exists(_cacheFilePath)}");
+                
+                if (File.Exists(_cacheFilePath))
+                {
+                    var fileInfo = new FileInfo(_cacheFilePath);
+                    _logger.LogInfo($"CACHE DEBUG: File size: {fileInfo.Length} bytes, last modified: {fileInfo.LastWriteTime}");
+                }
                 
                 _logger.LogSuccess($"Game cache saved successfully to: {_cacheFilePath}");
                 _logger.LogInfo($"Cache contains {cache.Games.Count} games and will expire on {cache.LastUpdated.Add(cache.CacheValidDuration)}");
@@ -96,6 +109,8 @@ namespace SimpleSteamSwitcher.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error saving game cache: {ex.Message}");
+                _logger.LogError($"CACHE DEBUG: SaveCacheAsync exception details: {ex}");
+                _logger.LogError($"CACHE DEBUG: Stack trace: {ex.StackTrace}");
             }
         }
         

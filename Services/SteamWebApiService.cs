@@ -443,39 +443,39 @@ namespace SimpleSteamSwitcher.Services
                 var processedCount = 0;
                 
                 for (int i = 0; i < allAppsToCheck.Count; i += batchSize)
-                {
+                    {
                     var batch = allAppsToCheck.Skip(i).Take(batchSize);
                     var batchTasks = batch.Select(async appId =>
                     {
-                        try
+                    try
+                    {
+                        var gameInfo = await GetGameInfoFromStoreAsync(appId);
+                        if (gameInfo != null)
                         {
-                            var gameInfo = await GetGameInfoFromStoreAsync(appId);
-                            if (gameInfo != null)
-                            {
                                                                  var isDemoOrBeta = gameInfo.IsDemo || gameInfo.IsBeta ||
                                                   gameInfo.Name?.ToLower().Contains("demo") == true ||
                                                   gameInfo.Name?.ToLower().Contains("beta") == true ||
                                                   gameInfo.Name?.ToLower().Contains("prologue") == true ||
                                                   gameInfo.Name?.ToLower().Contains("showcase") == true ||
                                                   gameInfo.Name?.ToLower().Contains("open beta") == true;
-                                
+                            
                                 if (isDemoOrBeta)
-                                {
+                            {
                                     _logger.LogInfo($"Found demo/beta game: {gameInfo.Name} ({appId})");
                                     return new SteamOwnedGame
-                                    {
-                                        AppId = appId,
-                                        Name = gameInfo.Name,
+                                {
+                                    AppId = appId,
+                                    Name = gameInfo.Name,
                                         PlaytimeForever = 0,
-                                        ImgIconUrl = gameInfo.HeaderImage ?? ""
-                                    };
-                                }
+                                    ImgIconUrl = gameInfo.HeaderImage ?? ""
+                                };
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning($"Failed to check demo/beta app {appId}: {ex.Message}");
-                        }
+                            }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Failed to check demo/beta app {appId}: {ex.Message}");
+                    }
                         return null;
                     });
                     
@@ -707,10 +707,10 @@ namespace SimpleSteamSwitcher.Services
                 
                 for (int attempt = 1; attempt <= maxRetries; attempt++)
                 {
-                    try
-                    {
-                        response = await _httpClient.GetStringAsync(url);
-                        _logger.LogInfo($"Steam Store API response for {appId}: {response.Substring(0, Math.Min(200, response.Length))}...");
+                try
+                {
+                    response = await _httpClient.GetStringAsync(url);
+                    _logger.LogInfo($"Steam Store API response for {appId}: {response.Substring(0, Math.Min(200, response.Length))}...");
                         break; // Success, exit retry loop
                     }
                     catch (HttpRequestException httpEx) when (httpEx.Message.Contains("429") && attempt < maxRetries)
@@ -725,14 +725,14 @@ namespace SimpleSteamSwitcher.Services
                         _logger.LogWarning($"Access forbidden for app {appId} (likely restricted/unavailable): {httpEx.Message}");
                         _gameTypeCache.SetGameType(appId, true, isUnavailable: true); // Cache as unavailable
                         return true; // Conservative: assume paid for restricted games
-                    }
-                    catch (Exception apiEx)
-                    {
+                }
+                catch (Exception apiEx)
+                {
                         if (attempt == maxRetries)
                         {
                             _logger.LogWarning($"Failed to call Steam Store API for {appId} after {maxRetries} attempts: {apiEx.Message}");
                             _gameTypeCache.SetGameType(appId, true, isUnavailable: true); // Cache as unavailable
-                            return true; // Conservative: assume paid if API fails
+                    return true; // Conservative: assume paid if API fails
                         }
                         else
                         {
@@ -789,12 +789,12 @@ namespace SimpleSteamSwitcher.Services
                             
                             // Check if any pattern matches
                             var matchedPattern = freePatterns.FirstOrDefault(pattern => gameNameLower.Contains(pattern));
-                                                            if (matchedPattern != null)
-                                {
+                            if (matchedPattern != null)
+                            {
                                     _logger.LogInfo($"Game {gameName} ({appId}) detected as F2P based on name pattern: '{matchedPattern}' (API IsFree was null)");
                                     _gameTypeCache.SetGameType(appId, false); // Cache the result
                                     return false; // It's free based on name pattern (fallback)
-                                }
+                            }
                         }
                         
                                                     // If we get here, API didn't provide IsFree and no name pattern matched
