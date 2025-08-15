@@ -754,13 +754,14 @@ namespace SimpleSteamSwitcher.ViewModels
                 {
                     try
                     {
-                        _apiKeyService.SaveApiKey(apiKey);
+                        // Use SetSteamWebApiKey to properly initialize the service
+                        SetSteamWebApiKey(apiKey, dialog.SaveKey);
                         RefreshApiKeyStatus();
-                        StatusMessage = "API key saved successfully!";
-                        _logger.LogSuccess("New API key configured by user");
-            }
-            catch (Exception ex)
-            {
+                        // StatusMessage is already set in SetSteamWebApiKey
+                        _logger.LogSuccess("New API key configured by user and service initialized");
+                    }
+                    catch (Exception ex)
+                    {
                         MessageBox.Show($"Failed to save API key: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         _logger.LogError($"Failed to save API key: {ex.Message}");
                     }
