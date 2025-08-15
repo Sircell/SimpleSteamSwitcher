@@ -1264,7 +1264,7 @@
                         CornerRadius="4">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" 
                                   HorizontalScrollBarVisibility="Auto"
-                                  MaxHeight="400"
+                                  MaxHeight="600"
                                   Padding="10">
                         <ItemsControl ItemsSource="{Binding FilteredGames}" AlternationCount="2">
                             <ItemsControl.ItemTemplate>
@@ -1432,8 +1432,8 @@
                 BorderBrush="#E0E0E0" 
                 BorderThickness="1" 
                 CornerRadius="4" 
-                Padding="10"
-                Margin="0,15,0,0">
+                Padding="6"
+                Margin="0,10,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -1452,7 +1452,7 @@
                                  Height="16"
                                  Margin="0,0,8,0"/>
                     <TextBlock Text="Processing..." 
-                               FontSize="12" 
+                               FontSize="11" 
                                Foreground="#666"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -1462,15 +1462,15 @@
                            Text="{Binding StatusMessage}" 
                            VerticalAlignment="Center"
                            TextWrapping="Wrap"
-                           FontSize="12"/>
+                           FontSize="11"/>
 
                 <!-- Account Count -->
                 <TextBlock Grid.Column="2" 
                            Text="{Binding Accounts.Count, StringFormat='{}{0} accounts'}" 
                            VerticalAlignment="Center"
-                           FontSize="12"
+                           FontSize="11"
                            Foreground="#666"
-                           Margin="10,0,0,0"/>
+                           Margin="8,0,0,0"/>
             </Grid>
         </Border>
     </Grid>
