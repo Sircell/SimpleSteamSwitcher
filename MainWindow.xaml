@@ -1,0 +1,1449 @@
+<Window x:Class="SimpleSteamSwitcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:SimpleSteamSwitcher"
+        xmlns:converters="clr-namespace:SimpleSteamSwitcher.Converters"
+        Title="Simple Steam Account Switcher" Height="650" Width="1000"
+        MinHeight="500" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        TextOptions.TextHintingMode="Fixed">
+    
+    <Window.Resources>
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        <converters:BoolToViewTextConverter x:Key="BoolToViewTextConverter"/>
+
+        
+        <!-- Tab Converters -->
+        <converters:TabBackgroundConverter x:Key="TabBackgroundConverter"/>
+        <converters:TabForegroundConverter x:Key="TabForegroundConverter"/>
+
+        <converters:SteamStatusConverter x:Key="SteamStatusConverter"/>
+        <converters:OnlineStatusConverter x:Key="OnlineStatusConverter"/>
+        <converters:OnlineStatusColorConverter x:Key="OnlineStatusColorConverter"/>
+        <converters:PasswordStatusBackgroundConverter x:Key="PasswordStatusBackgroundConverter"/>
+        
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1976D2"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#0D47A1"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#BDBDBD"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#666"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="Foreground" Value="#1976D2"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#BBDEFB"/>
+                                <Setter Property="Foreground" Value="#1976D2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <Grid>
+                                <ToggleButton x:Name="ToggleButton" 
+                                              Grid.Column="2" 
+                                              Focusable="false" 
+                                              IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                              ClickMode="Press">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="4">
+                                                <Path x:Name="Arrow" 
+                                                      Fill="#666" 
+                                                      HorizontalAlignment="Right" 
+                                                      VerticalAlignment="Center" 
+                                                      Margin="0,0,8,0" 
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <ContentPresenter x:Name="ContentSite" 
+                                                  IsHitTestVisible="False" 
+                                                  Content="{TemplateBinding SelectionBoxItem}" 
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                                  Margin="{TemplateBinding Padding}" 
+                                                  VerticalAlignment="Center" 
+                                                  HorizontalAlignment="Left"/>
+                                <TextBox x:Name="PART_EditableTextBox" 
+                                         Style="{x:Null}" 
+                                         Template="{DynamicResource ComboBoxTextBox}" 
+                                         HorizontalAlignment="Left" 
+                                         VerticalAlignment="Center" 
+                                         Margin="{TemplateBinding Padding}" 
+                                         Focusable="True" 
+                                         Background="Transparent" 
+                                         Visibility="Hidden" 
+                                         IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                                <Popup x:Name="Popup" 
+                                       Placement="Bottom" 
+                                       IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                       AllowsTransparency="True" 
+                                       Focusable="False" 
+                                       PopupAnimation="Slide">
+                                    <Grid x:Name="DropDown" 
+                                          SnapsToDevicePixels="True" 
+                                          MinWidth="{TemplateBinding ActualWidth}" 
+                                          MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                        <Border x:Name="DropDownBorder" 
+                                                Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" 
+                                                BorderThickness="1" 
+                                                BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" 
+                                                CornerRadius="4"/>
+                                        <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#1976D2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccountItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F0F8FF"/>
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Border x:Name="CheckBoxBorder" 
+                                    Grid.Column="0" 
+                                    Width="18" 
+                                    Height="18" 
+                                    Background="White" 
+                                    BorderBrush="#E0E0E0" 
+                                    BorderThickness="1" 
+                                    CornerRadius="2" 
+                                    Margin="0,0,8,0">
+                                <Path x:Name="CheckMark" 
+                                      Data="M 3 6 L 7 10 L 15 2" 
+                                      Stroke="White" 
+                                      StrokeThickness="2" 
+                                      Visibility="Collapsed"/>
+                            </Border>
+                            
+                            <ContentPresenter Grid.Column="1" 
+                                              Content="{TemplateBinding Content}" 
+                                              VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="CheckMark" Property="Stroke" Value="White"/>
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#2196F3"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#E3F2FD"/>
+                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="#2196F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Alternating Row Background Converter -->
+        <converters:AlternatingRowBackgroundConverter x:Key="AlternatingRowBackgroundConverter"/>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="Simple Steam Account Switcher" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="#1976D2"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Switch between Steam accounts without passwords" 
+                           FontSize="14" 
+                           Foreground="#666"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+            
+            <!-- Tab Navigation -->
+            <Border Grid.Row="0" 
+                    Background="White" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" 
+                           Margin="20,15">
+                    <Button Content="Accounts" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Background="{Binding IsAccountsTabVisible, Converter={StaticResource TabBackgroundConverter}}"
+                            Foreground="{Binding IsAccountsTabVisible, Converter={StaticResource TabForegroundConverter}}"
+                            Command="{Binding ShowAccountsTabCommand}"/>
+                    <Button Content="Save New Account" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Background="{Binding IsLoginTabVisible, Converter={StaticResource TabBackgroundConverter}}"
+                            Foreground="{Binding IsLoginTabVisible, Converter={StaticResource TabForegroundConverter}}"
+                            Command="{Binding ShowLoginTabCommand}"/>
+                    <Button Content="Games" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Background="{Binding IsGamesTabVisible, Converter={StaticResource TabBackgroundConverter}}"
+                            Foreground="{Binding IsGamesTabVisible, Converter={StaticResource TabForegroundConverter}}"
+                            Command="{Binding ShowGamesTabCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Tab Content -->
+        <Grid Grid.Row="1">
+            <!-- Accounts Tab -->
+            <Grid Visibility="{Binding IsAccountsTabVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Account Summary -->
+                <Border Grid.Row="0" 
+                        Background="#E8F5E8" 
+                        BorderBrush="#4CAF50" 
+                        BorderThickness="1" 
+                        CornerRadius="4" 
+                        Padding="15"
+                        Margin="0,0,0,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="📋 Your Steam Accounts" 
+                                       FontWeight="Bold" 
+                                       FontSize="16" 
+                                       Foreground="#2E7D32"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding Accounts.Count, StringFormat='{}{0} accounts stored'}" 
+                                       FontSize="14" 
+                                       Foreground="#388E3C"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock Text="Click 'Discover Accounts' to find more Steam accounts, or use the search box below to filter." 
+                                       FontSize="12" 
+                                       Foreground="#666"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" 
+                                    Orientation="Horizontal" 
+                                    VerticalAlignment="Center">
+                            <Button Content="🔍 Discover Accounts" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding DiscoverAccountsCommand}"
+                                    Background="#4CAF50"
+                                    FontSize="14"
+                                    Padding="20,12"
+                                    MinWidth="180"
+                                    ToolTip="Scan for new Steam accounts"/>
+                            <Button Content="💾 Export Passwords" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ExportPasswordsCommand}"
+                                    Background="#FF6B35"
+                                    Foreground="White"
+                                    Margin="10,0,0,0"
+                                    Padding="15,12"
+                                    ToolTip="Export account passwords to a text file on desktop"/>
+
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Current Account Display -->
+                <Border Grid.Row="1" 
+                        Background="White" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        CornerRadius="4" 
+                        Padding="15"
+                        Margin="0,0,0,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Current Account:" 
+                                       FontWeight="Bold" 
+                                       Foreground="#333"/>
+                            <TextBlock Text="{Binding CurrentAccount.DisplayName, FallbackValue='No account selected'}" 
+                                       FontSize="16" 
+                                       Foreground="#1976D2"
+                                       Margin="0,5,0,0"/>
+                            <TextBlock Text="{Binding CurrentAccount.SteamId, FallbackValue=''}" 
+                                       FontSize="12" 
+                                       Foreground="#666"
+                                       Margin="0,2,0,0"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <Ellipse Width="8" Height="8" 
+                                          Fill="{Binding IsSteamRunning, Converter={StaticResource SteamStatusConverter}, ConverterParameter=color}"
+                                          Margin="0,0,5,0"/>
+                                <TextBlock Text="{Binding IsSteamRunning, Converter={StaticResource SteamStatusConverter}}" 
+                                           FontSize="11" 
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" 
+                                    Orientation="Horizontal" 
+                                    VerticalAlignment="Center">
+                            <Button Content="🔧 Steam Settings" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding BrowseSteamFolderCommand}"
+                                    FontSize="13"
+                                    Padding="15,10"
+                                    MinWidth="140"
+                                    ToolTip="Browse Steam folder and manage Steam settings"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Quick Actions Panel -->
+                <Border Grid.Row="2" 
+                        Background="#E3F2FD" 
+                        BorderBrush="#BBDEFB" 
+                        BorderThickness="1" 
+                        CornerRadius="4" 
+                        Padding="15"
+                        Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="Quick Actions" 
+                                   FontWeight="Bold" 
+                                   FontSize="14" 
+                                   Foreground="#1976D2"
+                                   Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+
+                            <Button Content="📤 Export Full Backup" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ExportAccountsWithPasswordsCommand}"
+                                    Background="#2196F3"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="0,0,10,0"
+                                    ToolTip="Export complete account backup with encrypted passwords (JSON)"/>
+                            
+                            <Button Content="📥 Import Backup" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ImportAccountsCommand}"
+                                    Background="#FF9800"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="0,0,10,0"
+                                    ToolTip="Import accounts from backup file (JSON)"/>
+                            
+
+
+
+
+                            
+                            <Button Content="🎮 Refresh Game Count" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding RefreshGameCountCommand}"
+                                    Background="#9C27B0"
+                                    Padding="15,8"
+                                    Margin="10,0,0,0"
+                                    ToolTip="Fetch game count information from Steam Web API"/>
+                            
+                            <Button Content="📋 Open Log File" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding OpenLogFileCommand}"
+                                    Background="#607D8B"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="10,0,0,0"
+                                    ToolTip="Open the detailed log file to investigate operations"/>
+                            
+                            <Button Content="🧹 Clear Log File" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ClearLogFileCommand}"
+                                    Background="#795548"
+                                    Foreground="White"
+                                    Padding="15,8"
+                                    Margin="10,0,0,0"
+                                    ToolTip="Clear the contents of the log file (keeps the file)"/>
+
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Accounts List -->
+                <Grid Grid.Row="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header with Search -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" 
+                                   Text="Saved Accounts" 
+                                   FontWeight="Bold" 
+                                   FontSize="18" 
+                                   Foreground="#1976D2"/>
+                        
+                        <StackPanel Grid.Column="1" 
+                                    Orientation="Horizontal">
+                            <TextBlock Text="{Binding Accounts.Count, StringFormat='{}{0} accounts stored'}" 
+                                       FontSize="14" 
+                                       FontWeight="Medium" 
+                                       Foreground="#666"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- View Controls -->
+                    <Grid Grid.Row="1" Margin="10,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- View Toggle -->
+                        <Button Grid.Column="1" 
+                                Content="{Binding ShowCompactView, Converter={StaticResource BoolToViewTextConverter}}"
+                                Style="{StaticResource ModernButton}"
+                                Command="{Binding ToggleViewCommand}"
+                                Padding="10,5"
+                                FontSize="11"
+                                ToolTip="Toggle between card and list view"/>
+                    </Grid>
+
+                    <!-- Accounts Display -->
+                    <ScrollViewer Grid.Row="2" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  CanContentScroll="False"
+                                  Margin="10,5"
+                                  MaxHeight="450">
+                        <Grid>
+                            <!-- Card View -->
+                            <ItemsControl ItemsSource="{Binding FilteredAccounts}" 
+                                          SnapsToDevicePixels="True"
+                                          UseLayoutRounding="True"
+                                          Visibility="{Binding ShowCompactView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel SnapsToDevicePixels="True" UseLayoutRounding="True"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="AccountCard" 
+                                                Background="{Binding IsCurrentAccount, Converter={StaticResource TabBackgroundConverter}}"
+                                                BorderBrush="#E0E0E0"
+                                                BorderThickness="1" 
+                                                CornerRadius="10" 
+                                                Margin="8" 
+                                                Padding="16"
+                                                SnapsToDevicePixels="True"
+                                                UseLayoutRounding="True"
+                                                ToolTip="{Binding AccountName, StringFormat='Steam Login Username: {0}'}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#90CAF9"/>
+                                                            <Setter Property="Background" Value="#FAFCFF"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Account Header -->
+                                                <Grid Grid.Row="0" Margin="0,0,0,8" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <!-- Avatar / Initials circle -->
+                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#E3F2FD" Margin="0,0,10,0">
+                                                        <TextBlock Text="👤" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold" Foreground="#1976D2"/>
+                                                    </Border>
+                                                    
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding DisplayName}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="15" 
+                                                                   Foreground="#212121"
+                                                                   SnapsToDevicePixels="True"
+                                                                   UseLayoutRounding="True"/>
+                                                        <TextBlock Text="{Binding AccountName}" 
+                                                                   FontSize="11" 
+                                                                   Foreground="#757575" 
+                                                                   Margin="0,2,0,0"
+                                                                   SnapsToDevicePixels="True"
+                                                                   UseLayoutRounding="True"/>
+                                                    </StackPanel>
+                                                    
+                                                    <!-- Empty space where ban status and game count used to be -->
+                                                    <TextBlock Grid.Column="2" Text="" Margin="0,0,6,0"/>
+                                                    <TextBlock Grid.Column="3" Text="" Margin="0,0,6,0"/>
+                                                    
+                                                    <!-- CURRENT Badge -->
+                                                    <Border Grid.Column="4" 
+                                                            Background="#4CAF50" 
+                                                            CornerRadius="4" 
+                                                            Padding="6,3" 
+                                                            Visibility="{Binding IsCurrentAccount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="CURRENT" 
+                                                                   FontSize="8" 
+                                                                   FontWeight="Bold" 
+                                                                   Foreground="White"/>
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Account Details -->
+                                                <StackPanel Grid.Row="1" Margin="0,2,0,8" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                        <TextBlock Text="ID:" FontSize="10" Foreground="#9E9E9E"/>
+                                                        <TextBlock Text="{Binding SteamId}" FontSize="10" Foreground="#616161" Margin="4,0,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                        <TextBlock Text="Last login:" FontSize="10" Foreground="#9E9E9E"/>
+                                                        <TextBlock Text="{Binding LastLogin, StringFormat='{}{0:g}'}" FontSize="10" Foreground="#616161" Margin="4,0,0,0"/>
+                                                    </StackPanel>
+                                                    <!-- Ban Status Information -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Visibility="{Binding HasBanInfo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="{Binding BanStatusDisplay}" FontSize="10" Foreground="{Binding BanStatusColor}" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    
+                                                    <!-- Game Count Information -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Visibility="{Binding HasGameCountInfo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="{Binding GameCountDisplay}" FontSize="10" Foreground="#9C27B0" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <Ellipse Width="8" Height="8" Fill="{Binding IsCurrentAccount, Converter={StaticResource OnlineStatusColorConverter}}" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding IsCurrentAccount, Converter={StaticResource OnlineStatusConverter}}" FontSize="10" Foreground="#616161" Margin="6,0,0,0"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <Button Content="Switch" 
+                                                            Style="{StaticResource ModernButton}"
+                                                            Command="{Binding DataContext.SwitchToAccountCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="10,6"
+                                                            MinWidth="70"
+                                                            FontSize="11"
+                                                            Margin="0,0,6,0"/>
+                                                    <Button Content="Details" 
+                                                            Style="{StaticResource ModernButton}"
+                                                            Command="{Binding DataContext.ShowAccountDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="10,6"
+                                                            MinWidth="70"
+                                                            FontSize="11"
+                                                            Margin="0,0,6,0"
+                                                            ToolTip="View account details"/>
+                                                    <Button Content="✕" 
+                                                            Style="{StaticResource ModernButton}"
+                                                            Command="{Binding DataContext.RemoveAccountCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="6,6"
+                                                            MinWidth="30"
+                                                            FontSize="10"
+                                                            Background="#FF5252"
+                                                            Foreground="White"/>
+                                                </StackPanel>
+
+                                                <!-- Password Status at Bottom -->
+                                                <Grid Grid.Row="3" Margin="0,10,0,0">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <!-- Non-clickable status for accounts WITH password -->
+                                                        <Border CornerRadius="4" Padding="8,3" Background="{Binding HasStoredPassword, Converter={StaticResource PasswordStatusBackgroundConverter}}">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasStoredPassword}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock FontSize="10" Foreground="White" FontWeight="Medium">
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{0} Password">
+                                                                        <Binding Path="PasswordStatusIcon"/>
+                                                                        <Binding Path="PasswordStatus"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                        </Border>
+                                                        
+                                                        <!-- Clickable button for accounts WITHOUT password -->
+                                                        <Button Command="{Binding DataContext.AddPasswordCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                Padding="8,3"
+                                                                BorderThickness="0"
+                                                                Background="{Binding HasStoredPassword, Converter={StaticResource PasswordStatusBackgroundConverter}}"
+                                                                ToolTip="Click to add password for auto-fill">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasStoredPassword}" Value="False">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Opacity" Value="0.9"/>
+                                                                        </Trigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                            <TextBlock FontSize="10" Foreground="White" FontWeight="Medium">
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{0} Password">
+                                                                        <Binding Path="PasswordStatusIcon"/>
+                                                                        <Binding Path="PasswordStatus"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- List View -->
+                            <ItemsControl ItemsSource="{Binding FilteredAccounts}" 
+                                          SnapsToDevicePixels="True"
+                                          UseLayoutRounding="True"
+                                          Visibility="{Binding ShowCompactView, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                                          Background="Transparent">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1" Background="White"
+                                                Padding="12" Margin="6" SnapsToDevicePixels="True" UseLayoutRounding="True"
+                                                ToolTip="{Binding AccountName, StringFormat='Steam Login Username: {0}'}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#90CAF9"/>
+                                                            <Setter Property="Background" Value="#FAFCFF"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Avatar -->
+                                                <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="#E3F2FD" Margin="0,0,12,0">
+                                                    <TextBlock Text="👤" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
+                                                </Border>
+
+                                                <!-- Names and meta -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13" Foreground="#212121"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding AccountName}" FontSize="11" Foreground="#757575"/>
+                                                        <TextBlock Text=" • " FontSize="11" Foreground="#BDBDBD" Margin="4,0"/>
+                                                        <TextBlock Text="{Binding LastLogin, StringFormat='Last: {}{0:g}'}" FontSize="11" Foreground="#757575"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Badges -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                                    <!-- Ban -->
+                                                    <Border Background="{Binding BanStatusColor}" CornerRadius="4" Padding="6,3" Margin="0,0,6,0"
+                                                            Visibility="{Binding HasBanInfo, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            ToolTip="{Binding BanStatusDisplay}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding BanStatusIcon}" FontSize="9" Foreground="White" Margin="0,0,3,0"/>
+                                                            <TextBlock Text="BAN" FontSize="8" FontWeight="Bold" Foreground="White"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <!-- Games -->
+                                                    <Border Background="#9C27B0" CornerRadius="4" Padding="6,3" Margin="0,0,6,0"
+                                                            Visibility="{Binding HasGameCountInfo, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            ToolTip="{Binding GameCountDisplay}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding GameCountIcon}" FontSize="9" Foreground="White" Margin="0,0,3,0"/>
+                                                            <TextBlock Text="{Binding GameCountShortDisplay}" FontSize="8" FontWeight="Bold" Foreground="White"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <!-- Current -->
+                                                    <Border Background="#4CAF50" CornerRadius="4" Padding="6,3"
+                                                            Visibility="{Binding IsCurrentAccount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="CURRENT" FontSize="8" FontWeight="Bold" Foreground="White"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- Actions -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Switch" Style="{StaticResource ModernButton}"
+                                                            Command="{Binding DataContext.SwitchToAccountCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" Padding="8,4" MinWidth="64" FontSize="10" Margin="0,0,6,0"/>
+                                                    <Button Content="✕" Style="{StaticResource ModernButton}"
+                                                            Command="{Binding DataContext.RemoveAccountCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" Padding="4,4" MinWidth="28" FontSize="10" Background="#FF5252" Foreground="White"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <!-- Save New Account Tab -->
+            <Grid Visibility="{Binding IsLoginTabVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Border Background="White" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4" 
+                            Padding="30"
+                            MaxWidth="500"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Margin="20">
+                        <StackPanel>
+                            <TextBlock Text="Save New Steam Account" 
+                                       FontSize="20" FontWeight="Bold" 
+                                       Foreground="#1976D2" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,30"/>
+
+                            <TextBlock Text="Username:" 
+                                       Foreground="#333" 
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding LoginUsername, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernTextBox}"
+                                     Margin="0,0,0,20"
+                                     ToolTip="Enter Steam username"/>
+
+                            <TextBlock Text="Password:" 
+                                       Foreground="#333" 
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,5"/>
+                            <PasswordBox x:Name="LoginPasswordBox"
+                                         Style="{StaticResource ModernPasswordBox}"
+                                         Margin="0,0,0,20"
+                                         ToolTip="Enter Steam password"/>
+
+                            <CheckBox Content="Remember Password" 
+                                      IsChecked="{Binding RememberPassword}"
+                                      Style="{StaticResource ModernCheckBox}"
+                                      Margin="0,0,0,25"
+                                      ToolTip="Save password for automatic login"/>
+
+                            <Button Content="Save Account" 
+                                    Command="{Binding SaveAccountCommand}"
+                                    Style="{StaticResource ModernButton}"
+                                    HorizontalAlignment="Stretch"
+                                    FontSize="16"
+                                    Padding="20,12"
+                                    ToolTip="Save this account to your list"/>
+
+                            <TextBlock Text="{Binding LoginStatusMessage}" 
+                                       Foreground="#666" 
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,15,0,0"
+                                       FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Games Tab -->
+            <Grid Visibility="{Binding IsGamesTabVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Games Header -->
+                <Border Grid.Row="0" 
+                        Background="#F3E5F5" 
+                        BorderBrush="#9C27B0" 
+                        BorderThickness="1" 
+                        CornerRadius="4" 
+                        Padding="20"
+                        Margin="0,0,0,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="🎮 Games Library" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Foreground="#7B1FA2"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock Text="All games from all your Steam accounts" 
+                                       FontSize="14" 
+                                       Foreground="#8E24AA"/>
+                        </StackPanel>
+                        
+                        <!-- Responsive Button Layout -->
+                        <StackPanel Grid.Column="1" 
+                                    Orientation="Horizontal" 
+                                    VerticalAlignment="Center"
+                                    x:Name="HeaderButtonsPanel">
+                            <Button Content="🔄 Update Games List" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding LoadAllGamesCommand}"
+                                    Background="#9C27B0"
+                                    Padding="15,10"
+                                    Margin="0,0,10,0"
+                                    MinWidth="120"
+                                    ToolTip="Update games list with latest data from Steam API"/>
+                            
+                            <Button Content="🗑️ Clear Cache" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ClearGameCacheCommand}"
+                                    Background="#F44336"
+                                    Padding="15,10"
+                                    Margin="0,0,10,0"
+                                    MinWidth="100"
+                                    ToolTip="Clear cached games and force fresh data on next load"/>
+                            
+                            <Button Content="🎮 Scan Demo/Beta Games" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ScanDemoBetaGamesCommand}"
+                                    Background="#4CAF50"
+                                    Padding="15,10"
+                                    Margin="0,0,10,0"
+                                    MinWidth="140"
+                                    ToolTip="Optional: Scan for demo and beta games from installed apps"/>
+                            
+                            <Button Content="{Binding ApiKeyButtonText}" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding ConfigureApiKeyCommand}"
+                                    Background="{Binding ApiKeyButtonColor}"
+                                    Padding="15,10"
+                                    MinWidth="140"
+                                    ToolTip="Configure Steam Web API key"/>
+                            
+                            <!-- Cache Status -->
+                            <TextBlock Text="{Binding CacheStatus}" 
+                                       FontSize="11" 
+                                       Foreground="#666"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,0,0"
+                                       ToolTip="Game cache status and expiration time"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Search and Filters -->
+                <Border Grid.Row="1" 
+                        Background="White" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        CornerRadius="4" 
+                        Padding="15"
+                        Margin="0,0,0,15">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Search Row -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🔍" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding GameSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource ModernTextBox}"
+                                         MinWidth="200"
+                                         MaxWidth="400"
+                                         Margin="0,0,15,0"
+                                         VerticalAlignment="Center"
+                                         x:Name="GameSearchBox"
+                                         ToolTip="Search games by name, owner, or type"/>
+                                
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding FilteredGames.Count, StringFormat='{}{0} games'}" 
+                                               FontWeight="Bold" 
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <TextBlock Text="•" 
+                                               Foreground="#666" 
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <TextBlock Text="{Binding Accounts.Count, StringFormat='{}{0} accounts'}" 
+                                               Foreground="#666"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <!-- Loading indicator -->
+                            <StackPanel Grid.Column="1" 
+                                        Orientation="Horizontal" 
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding IsLoadingGames, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <ProgressBar IsIndeterminate="True" 
+                                             Width="20" 
+                                             Height="20"
+                                             Margin="0,0,10,0"/>
+                                <TextBlock Text="Loading games..." 
+                                           FontSize="12" 
+                                           Foreground="#666"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Responsive Filters Row -->
+                        <Grid Grid.Row="1" Margin="0,10,0,0" x:Name="FiltersGrid">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Filter by Type -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Type:" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="GameTypeFilter" 
+                                          Width="120" 
+                                          SelectedIndex="0"
+                                          SelectionChanged="GameTypeFilter_SelectionChanged">
+                                    <ComboBoxItem Content="All Games"/>
+                                    <ComboBoxItem Content="Paid Only"/>
+                                    <ComboBoxItem Content="Free-to-Play"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Filter by Owner -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Owner:" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="OwnerFilter" 
+                                          Width="150" 
+                                          SelectedIndex="0"
+                                          SelectionChanged="OwnerFilter_SelectionChanged">
+                                    <ComboBoxItem Content="All Owners"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Sort by -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Sort:" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="SortFilter" 
+                                          Width="120" 
+                                          SelectedIndex="0"
+                                          SelectionChanged="SortFilter_SelectionChanged">
+                                    <ComboBoxItem Content="Name A-Z"/>
+                                    <ComboBoxItem Content="Name Z-A"/>
+                                    <ComboBoxItem Content="Playtime ↓"/>
+                                    <ComboBoxItem Content="Playtime ↑"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Installed filter -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Installed:" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="InstalledFilter" 
+                                          Width="120" 
+                                          SelectedIndex="0"
+                                          SelectionChanged="InstalledFilter_SelectionChanged">
+                                    <ComboBoxItem Content="All"/>
+                                    <ComboBoxItem Content="Installed Only"/>
+                                    <ComboBoxItem Content="Not Installed"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Games per page -->
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Show:" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="PageSizeFilter" 
+                                          Width="80" 
+                                          SelectedIndex="1"
+                                          SelectionChanged="PageSizeFilter_SelectionChanged">
+                                    <ComboBoxItem Content="10"/>
+                                    <ComboBoxItem Content="25"/>
+                                    <ComboBoxItem Content="50"/>
+                                    <ComboBoxItem Content="100"/>
+                                    <ComboBoxItem Content="All"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Pagination Controls -->
+                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="PrevPageButton" 
+                                        Content="◀" 
+                                        Width="30" 
+                                        Height="25"
+                                        Margin="0,0,5,0"
+                                        Click="PrevPageButton_Click"
+                                        IsEnabled="False"/>
+                                <TextBlock x:Name="PageInfoText" 
+                                           Text="Page 1 of 1" 
+                                           FontSize="12" 
+                                           Foreground="#666" 
+                                           VerticalAlignment="Center"
+                                           Margin="5,0"/>
+                                <Button x:Name="NextPageButton" 
+                                        Content="▶" 
+                                        Width="30" 
+                                        Height="25"
+                                        Margin="5,0,0,0"
+                                        Click="NextPageButton_Click"
+                                        IsEnabled="False"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Games List -->
+                <Border Grid.Row="2" 
+                        Background="White" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        CornerRadius="4">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                  HorizontalScrollBarVisibility="Auto"
+                                  MaxHeight="400"
+                                  Padding="10">
+                        <ItemsControl ItemsSource="{Binding FilteredGames}" AlternationCount="2">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#F0F0F0" 
+                                            BorderThickness="1" 
+                                            CornerRadius="4" 
+                                            Margin="5"
+                                            Padding="15"
+                                            Cursor="Hand"
+                                            MouseLeftButtonUp="GameItem_Click"
+                                            ToolTip="Click to switch to switch to the account that owns this game">
+                                        <Border.Background>
+                                            <MultiBinding Converter="{StaticResource AlternatingRowBackgroundConverter}">
+                                                <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                                <Binding Path="DataContext.EnableAlternatingRows" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                            </MultiBinding>
+                                        </Border.Background>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                        <Setter Property="BorderBrush" Value="#2196F3"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <!-- Game Icon -->
+                                            <Border Grid.Column="0" 
+                                                    Width="32" 
+                                                    Height="32" 
+                                                    Background="#F5F5F5" 
+                                                    CornerRadius="4"
+                                                    Margin="0,0,15,0">
+                                                <TextBlock Text="🎮" 
+                                                           FontSize="16" 
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            
+                                            <!-- Game Info -->
+                                            <StackPanel Grid.Column="1" MinWidth="200">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           FontWeight="Bold" 
+                                                           FontSize="14" 
+                                                           Foreground="#333"
+                                                           TextWrapping="Wrap"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <!-- For F2P games, show dropdown to select account -->
+                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsF2PWithMultipleAccounts, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="Launch as: " 
+                                                                   FontSize="11" 
+                                                                   Foreground="#666"
+                                                                   VerticalAlignment="Center"/>
+                                                        <ComboBox ItemsSource="{Binding AvailableAccounts}"
+                                                                  DisplayMemberPath="DisplayName"
+                                                                  SelectedItem="{Binding AvailableAccounts[0]}"
+                                                                  Width="120"
+                                                                  Height="22"
+                                                                  FontSize="10"
+                                                                  Margin="5,0">
+                                                            <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBlock Text="{Binding DisplayName}" FontSize="10"/>
+                                                                </DataTemplate>
+                                                            </ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                        <Button Content="🚀 Launch" 
+                                                                FontSize="10" 
+                                                                Padding="5,2" 
+                                                                Margin="5,0,0,0"
+                                                                Background="#4CAF50"
+                                                                Foreground="White"
+                                                                BorderThickness="0"
+                                                                Cursor="Hand"
+                                                                Click="LaunchF2PGame_Click"
+                                                                ToolTip="Launch this F2P game with selected account"/>
+                                                    </StackPanel>
+                                                    
+                                                    <!-- For paid games, show regular owner info -->
+                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsF2PWithMultipleAccounts, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="Owner: " 
+                                                                   FontSize="11" 
+                                                                   Foreground="#666"/>
+                                                        <TextBlock Text="{Binding OwnerDisplay}" 
+                                                                   FontSize="11" 
+                                                                   FontWeight="Medium" 
+                                                                   Foreground="#1976D2"/>
+                                                        <TextBlock Text=" 🔗" 
+                                                                   FontSize="10" 
+                                                                   Foreground="#1976D2"
+                                                                   ToolTip="Click to switch to this account"
+                                                                   Margin="3,0,0,0"/>
+                                                    </StackPanel>
+                                                    
+                                                    <TextBlock Text=" • " 
+                                                               FontSize="11" 
+                                                               Foreground="#666"
+                                                               Margin="5,0"/>
+                                                    <TextBlock Text="{Binding PlaytimeDisplay}" 
+                                                               FontSize="11" 
+                                                               Foreground="#666"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            
+                                            <!-- Game Type Badge -->
+                                            <Border Grid.Column="2" 
+                                                    Background="{Binding GameTypeColor}" 
+                                                    CornerRadius="10" 
+                                                    Padding="8,3"
+                                                    Margin="10,0"
+                                                    MinWidth="80">
+                                                <TextBlock Text="{Binding GameType}" 
+                                                           FontSize="10" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="Wrap"/>
+                                            </Border>
+                                            
+                                            <!-- App ID -->
+                                            <TextBlock Grid.Column="3" 
+                                                       Text="{Binding AppId}" 
+                                                       FontSize="10" 
+                                                       Foreground="#999"
+                                                       VerticalAlignment="Center"
+                                                       Margin="10,0"
+                                                       MinWidth="60"/>
+                                            
+                                            <!-- Playtime Display -->
+                                            <TextBlock Grid.Column="4" 
+                                                       Text="{Binding PlaytimeDisplay}" 
+                                                       FontSize="11" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="#666"
+                                                       VerticalAlignment="Center"
+                                                       Margin="10,0,0,0"
+                                                       MinWidth="50"/>
+
+                                         </Grid>
+                                     </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" 
+                Background="White" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="4" 
+                Padding="10"
+                Margin="0,15,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Loading Indicator -->
+                <StackPanel Grid.Column="0" 
+                            Orientation="Horizontal" 
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Margin="0,0,10,0">
+                    <ProgressBar IsIndeterminate="True" 
+                                 Width="16" 
+                                 Height="16"
+                                 Margin="0,0,8,0"/>
+                    <TextBlock Text="Processing..." 
+                               FontSize="12" 
+                               Foreground="#666"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Status Message -->
+                <TextBlock Grid.Column="1" 
+                           Text="{Binding StatusMessage}" 
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"
+                           FontSize="12"/>
+
+                <!-- Account Count -->
+                <TextBlock Grid.Column="2" 
+                           Text="{Binding Accounts.Count, StringFormat='{}{0} accounts'}" 
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="#666"
+                           Margin="10,0,0,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window> 

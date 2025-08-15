@@ -1,0 +1,159 @@
+# ====================================
+# SimpleSteamSwitcher - GitHub Safe Configuration
+# This .gitignore ensures NO user data gets published
+# ====================================
+
+# ==========================================
+# 🔒 CRITICAL: USER DATA PROTECTION
+# ==========================================
+# These directories/files contain private account information
+# and must NEVER be committed to version control
+
+# User data stored in %APPDATA%\SimpleSteamSwitcher\
+**/AppData/
+**/ApplicationData/
+accounts.json
+api_key.dat
+games_cache.json
+game_types_cache.json
+simple_steam_switcher.log
+*.log
+
+# Any files containing "account" or "private" in name
+*account*
+*private*
+*secret*
+*password*
+
+# ==========================================
+# 🏗️ BUILD & DEVELOPMENT FILES
+# ==========================================
+
+# Build results
+bin/
+obj/
+out/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# ==========================================
+# 🛠️ VISUAL STUDIO & DEVELOPMENT TOOLS
+# ==========================================
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# ==========================================
+# 🔧 SYSTEM & TEMPORARY FILES  
+# ==========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# ==========================================
+# 📦 PACKAGE MANAGERS & DEPENDENCIES
+# ==========================================
+
+# npm (if using any web components)
+node_modules/
+npm-debug.log*
+
+# Yarn
+yarn-error.log
+
+# ==========================================
+# 📱 APPLICATION-SPECIFIC EXCLUSIONS
+# ==========================================
+
+# Steam-related files (in case they get copied locally)
+**/Steam/config/
+**/Steam/userdata/
+*.vdf
+loginusers.vdf
+config.vdf
+
+# Any files with Steam IDs or account names in filename
+*76561*
+*steam_*
+*account_*
+
+# Debug and test files
+debug/
+test_data/
+sample_data/
+*_test.json
+*_sample.json
+
+# ==========================================
+# 🚀 DEPLOYMENT & RELEASE EXCLUSIONS
+# ==========================================
+
+# Publish profiles
+PublishProfiles/
+
+# Release packages (will be handled by GitHub Releases)
+*.zip
+*.exe
+releases/
+dist/
+
+# ==========================================
+# 📝 DOCUMENTATION DRAFTS
+# ==========================================
+
+# Draft documentation that might contain sensitive examples
+*_draft.*
+*_private.*
+TODO_private.md
+notes_private.txt
+
+# ==========================================
+# 🔍 SAFETY NET - CATCH-ALL PATTERNS
+# ==========================================
+
+# Any file that might contain sensitive data
+*sensitive*
+*confidential*
+*personal*
+*private_*
+*secret_*
+
+# Backup files that might contain data
+*.bak
+*.backup
+*.old
+
+# ==========================================
+# END OF GITIGNORE
+# ========================================== 
