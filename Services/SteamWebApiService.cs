@@ -634,7 +634,7 @@ namespace SimpleSteamSwitcher.Services
                         checkedCount++;
                         
                         // Longer delay to avoid rate limiting (Steam Store API is strict)
-                        await Task.Delay(250);
+                        await Task.Delay(600);
                         
                         // Log progress every 5 games
                         if (checkedCount % 5 == 0)
@@ -650,7 +650,7 @@ namespace SimpleSteamSwitcher.Services
                         checkedCount++;
                         
                         // Much longer delay when rate limited
-                        await Task.Delay(2000);
+                        await Task.Delay(5000);
                     }
                     catch (Exception ex)
                     {
@@ -701,16 +701,54 @@ namespace SimpleSteamSwitcher.Services
                 // Use Steam Store API to get app details with retry logic
                 var url = $"https://store.steampowered.com/api/appdetails?appids={appId}&filters=basic";
                 
-                string response;
-                try
+                string response = null;
+                var maxRetries = 3;
+                var retryDelay = 1000; // Start with 1 second
+                
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
                 {
-                    response = await _httpClient.GetStringAsync(url);
-                    _logger.LogInfo($"Steam Store API response for {appId}: {response.Substring(0, Math.Min(200, response.Length))}...");
+                    try
+                    {
+                        response = await _httpClient.GetStringAsync(url);
+                        _logger.LogInfo($"Steam Store API response for {appId}: {response.Substring(0, Math.Min(200, response.Length))}...");
+                        break; // Success, exit retry loop
+                    }
+                    catch (HttpRequestException httpEx) when (httpEx.Message.Contains("429") && attempt < maxRetries)
+                    {
+                        _logger.LogWarning($"Rate limited for app {appId}, attempt {attempt}/{maxRetries}. Waiting {retryDelay}ms...");
+                        await Task.Delay(retryDelay);
+                        retryDelay *= 2; // Exponential backoff
+                        continue;
+                    }
+                    catch (HttpRequestException httpEx) when (httpEx.Message.Contains("403"))
+                    {
+                        _logger.LogWarning($"Access forbidden for app {appId} (likely restricted/unavailable): {httpEx.Message}");
+                        _gameTypeCache.SetGameType(appId, true, isUnavailable: true); // Cache as unavailable
+                        return true; // Conservative: assume paid for restricted games
+                    }
+                    catch (Exception apiEx)
+                    {
+                        if (attempt == maxRetries)
+                        {
+                            _logger.LogWarning($"Failed to call Steam Store API for {appId} after {maxRetries} attempts: {apiEx.Message}");
+                            _gameTypeCache.SetGameType(appId, true, isUnavailable: true); // Cache as unavailable
+                            return true; // Conservative: assume paid if API fails
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"API call failed for app {appId}, attempt {attempt}/{maxRetries}: {apiEx.Message}. Retrying...");
+                            await Task.Delay(retryDelay);
+                            retryDelay *= 2;
+                        }
+                    }
                 }
-                catch (Exception apiEx)
+                
+                // If we get here and response is still null, all retries failed
+                if (response == null)
                 {
-                    _logger.LogWarning($"Failed to call Steam Store API for {appId}: {apiEx.Message}");
-                    return true; // Conservative: assume paid if API fails
+                    _logger.LogError($"All retry attempts failed for app {appId}");
+                    _gameTypeCache.SetGameType(appId, true, isUnavailable: true);
+                    return true; // Conservative: assume paid
                 }
                 
                 var apiResponse = JsonConvert.DeserializeObject<Dictionary<string, SteamAppDetailsResponse>>(response);

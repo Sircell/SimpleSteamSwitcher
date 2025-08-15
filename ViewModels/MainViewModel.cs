@@ -372,7 +372,7 @@ namespace SimpleSteamSwitcher.ViewModels
                 var installedAppIds = await _steamService.GetInstalledAppIdsAsync();
 
                 // OPTIMIZATION: Process accounts in parallel for faster loading
-                var semaphore = new SemaphoreSlim(3, 3); // Limit to 3 concurrent requests to avoid overwhelming Steam API
+                var semaphore = new SemaphoreSlim(2, 2); // Reduced to 2 concurrent requests to be more conservative
                 var completedAccounts = 0;
                 var tasks = accountsList.Select(async account =>
                 {
@@ -513,46 +513,37 @@ namespace SimpleSteamSwitcher.ViewModels
                 {
                     _logger.LogInfo($"Checking paid status for {unknownGames.Count} games using optimized parallel processing...");
                     
-                    // OPTIMIZATION: Process multiple games in parallel with controlled concurrency
-                    var paidCheckSemaphore = new SemaphoreSlim(3, 3); // Reduced to 3 concurrent API calls to avoid 429 errors
-                    var totalProcessed = 0;
+                    // OPTIMIZATION: Process games sequentially with proper delays to avoid API rate limiting
+                    _logger.LogInfo("Processing games sequentially to avoid Steam API rate limits...");
                     var processedCount = 0;
                     
-                    var paidCheckTasks = unknownGames.Select(async game =>
+                    foreach (var game in unknownGames)
                     {
-                        await paidCheckSemaphore.WaitAsync();
                         try
                         {
                             var isReallyPaid = await _steamWebApiService.IsGamePaidAsync(game.AppId);
                             game.IsPaid = isReallyPaid;
                             
-                            var current = Interlocked.Increment(ref processedCount);
-                            if (current % 10 == 0 || current == unknownGames.Count)
+                            processedCount++;
+                            if (processedCount % 10 == 0 || processedCount == unknownGames.Count)
                             {
                                 await Application.Current.Dispatcher.InvokeAsync(() =>
                                 {
-                                    StatusMessage = $"Checking game types... ({current}/{unknownGames.Count})";
+                                    StatusMessage = $"Checking game types... ({processedCount}/{unknownGames.Count})";
                                 });
-                                _logger.LogInfo($"Paid status progress: {current}/{unknownGames.Count}");
+                                _logger.LogInfo($"Paid status progress: {processedCount}/{unknownGames.Count}");
                             }
                             
-                            // Slightly increased delay to be more respectful to Steam API
-                            await Task.Delay(400);
+                            // Longer delay to be respectful to Steam API and avoid rate limiting
+                            await Task.Delay(800);
                         }
                         catch (Exception ex)
                         {
                             _logger.LogError($"Error checking paid status for {game.Name}: {ex.Message}");
                             // Keep as paid if check fails (conservative approach)
                         }
-                        finally
-                        {
-                            paidCheckSemaphore.Release();
-                            Interlocked.Increment(ref totalProcessed);
-                        }
-                    });
-
-                    await Task.WhenAll(paidCheckTasks);
-                    _logger.LogInfo($"Determined paid status for {totalProcessed} games using parallel processing");
+                    }
+                    _logger.LogInfo($"Determined paid status for {processedCount} games using sequential processing");
                 }
                 
                 _logger.LogSuccess($"Fetched {uniqueGames.Count} unique games from {accountsWithGames} accounts");
