@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <AssemblyTitle>Simple Steam Account Switcher</AssemblyTitle>
     <AssemblyDescription>A simple Steam account switcher that saves no passwords</AssemblyDescription>

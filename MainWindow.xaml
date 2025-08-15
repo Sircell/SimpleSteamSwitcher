@@ -407,7 +407,7 @@
                                        FontSize="14" 
                                        Foreground="#388E3C"
                                        Margin="0,0,0,5"/>
-                            <TextBlock Text="Click 'Discover Accounts' to find more Steam accounts, or use the search box below to filter." 
+                            <TextBlock Text="Click 'Discover Accounts' to automatically find Steam accounts, or 'Select Steam Directory' if Steam is in a custom location." 
                                        FontSize="12" 
                                        Foreground="#666"
                                        TextWrapping="Wrap"/>
@@ -424,6 +424,16 @@
                                     Padding="20,12"
                                     MinWidth="180"
                                     ToolTip="Scan for new Steam accounts"/>
+                            <Button Content="📁 Select Steam Directory" 
+                                    Style="{StaticResource ModernButton}"
+                                    Command="{Binding SelectSteamDirectoryCommand}"
+                                    Background="#2196F3"
+                                    Foreground="White"
+                                    Margin="10,0,0,0"
+                                    FontSize="14"
+                                    Padding="15,12"
+                                    MinWidth="180"
+                                    ToolTip="Manually select Steam installation directory"/>
                             <Button Content="💾 Export Passwords" 
                                     Style="{StaticResource ModernButton}"
                                     Command="{Binding ExportPasswordsCommand}"

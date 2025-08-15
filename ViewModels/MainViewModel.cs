@@ -65,6 +65,7 @@ namespace SimpleSteamSwitcher.ViewModels
         public ICommand SwitchToAccountCommand { get; private set; }
         public ICommand RefreshAccountsCommand { get; private set; }
         public ICommand DiscoverAccountsCommand { get; private set; }
+        public ICommand SelectSteamDirectoryCommand { get; private set; }
         public ICommand RemoveAccountCommand { get; private set; }
         public ICommand ExportPasswordsCommand { get; private set; }
 
@@ -164,6 +165,7 @@ namespace SimpleSteamSwitcher.ViewModels
             SwitchToAccountCommand = new RelayCommand<SteamAccount>(async account => await SwitchToAccountAsync(account));
             RefreshAccountsCommand = new RelayCommand(async () => await RefreshAccountsAsync());
             DiscoverAccountsCommand = new RelayCommand(async () => await DiscoverAccountsAsync());
+            SelectSteamDirectoryCommand = new RelayCommand(async () => await SelectSteamDirectoryAsync());
             RemoveAccountCommand = new RelayCommand<SteamAccount>(async account => await RemoveAccountAsync(account));
             ExportPasswordsCommand = new RelayCommand(async () => await ExportPasswordsToFileAsync());
 
@@ -2724,20 +2726,30 @@ namespace SimpleSteamSwitcher.ViewModels
             catch (DirectoryNotFoundException ex)
             {
                 StatusMessage = $"Steam not found: {ex.Message}";
-                System.Windows.MessageBox.Show(
-                    $"Steam installation not found.\n\nError: {ex.Message}\n\nPlease ensure Steam is installed and try again.",
+                var result = System.Windows.MessageBox.Show(
+                    $"Steam installation not found.\n\nError: {ex.Message}\n\nWould you like to manually select your Steam directory?",
                     "Steam Not Found",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
+                
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    await SelectSteamDirectoryAsync();
+                }
             }
             catch (FileNotFoundException ex)
             {
                 StatusMessage = $"Steam login file not found: {ex.Message}";
-                System.Windows.MessageBox.Show(
-                    $"Steam login file not found.\n\nError: {ex.Message}\n\nPlease ensure you have logged into Steam at least once.",
+                var result = System.Windows.MessageBox.Show(
+                    $"Steam login file not found.\n\nError: {ex.Message}\n\nThis might mean Steam is in a different location. Would you like to manually select your Steam directory?",
                     "Steam Login File Not Found",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
+                
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    await SelectSteamDirectoryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -3856,6 +3868,84 @@ namespace SimpleSteamSwitcher.ViewModels
                 return false;
                 
             return Accounts.Any(a => a.SteamId == steamId);
+        }
+
+        /// <summary>
+        /// Allow user to manually select Steam directory when auto-discovery fails
+        /// </summary>
+        private async Task SelectSteamDirectoryAsync()
+        {
+            try
+            {
+                var dialog = new System.Windows.Forms.FolderBrowserDialog();
+                dialog.Description = "Select your Steam installation directory";
+                dialog.ShowNewFolderButton = false;
+                
+                // Try to set initial directory to a common Steam location
+                var commonPaths = new[]
+                {
+                    @"C:\Program Files (x86)\Steam",
+                    @"C:\Program Files\Steam",
+                    @"D:\Steam",
+                    @"E:\Steam"
+                };
+                
+                foreach (var path in commonPaths)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        dialog.SelectedPath = path;
+                        break;
+                    }
+                }
+
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var selectedPath = dialog.SelectedPath;
+                    
+                    // Validate that this is actually a Steam directory
+                    var steamExe = Path.Combine(selectedPath, "Steam.exe");
+                    var loginUsersPath = Path.Combine(selectedPath, "config", "loginusers.vdf");
+                    
+                    if (!File.Exists(steamExe))
+                    {
+                        MessageBox.Show(
+                            $"The selected directory does not appear to be a Steam installation.\n\nSteam.exe not found in: {selectedPath}",
+                            "Invalid Steam Directory",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+                    
+                    if (!File.Exists(loginUsersPath))
+                    {
+                        MessageBox.Show(
+                            $"Steam installation found, but no login data available.\n\nloginusers.vdf not found in: {Path.Combine(selectedPath, "config")}\n\nPlease ensure you have logged into Steam at least once with this installation.",
+                            "No Login Data Found",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+                    
+                    // Set the custom Steam path
+                    _steamService.SetCustomSteamPath(selectedPath);
+                    _logger.LogSuccess($"Custom Steam path set to: {selectedPath}");
+                    
+                    // Now try to discover accounts with the custom path
+                    StatusMessage = "Discovering accounts from custom Steam directory...";
+                    await DiscoverAccountsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error selecting Steam directory: {ex.Message}";
+                MessageBox.Show(
+                    $"Error selecting Steam directory.\n\nError: {ex.Message}",
+                    "Directory Selection Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                _logger.LogError($"Error in SelectSteamDirectoryAsync: {ex.Message}");
+            }
         }
 
         // End of MainViewModel class
