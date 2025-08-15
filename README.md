@@ -119,9 +119,8 @@ The application parses and modifies Steam's VDF (Valve Data Format) files:
 
 This project is open source and available under the MIT License.
 
-## Disclaimer
 
-This application is not affiliated with Valve Corporation or Steam. Use at your own risk. The application manipulates Steam configuration files, which could potentially cause issues if used incorrectly. Always backup your Steam configuration before using this tool.
+
 
 ## Contributing
 
